@@ -67,8 +67,12 @@ function initMobileFilters() {
                     const section = document.getElementById(sectionId);
                     if (section) {
                         const clone = section.cloneNode(true);
-                        // Remove ID to avoid duplicates
+                        // Remove IDs from clone and all its children to avoid duplicates
                         clone.removeAttribute('id');
+                        clone.querySelectorAll('[id]').forEach(el => {
+                            el.setAttribute('data-original-id', el.id);
+                            el.removeAttribute('id');
+                        });
                         // Re-attach event listeners for cloned inputs
                         attachInputListeners(clone);
                         mobilePanelContent.appendChild(clone);
@@ -93,11 +97,12 @@ function attachInputListeners(container) {
     // Attach slider listeners
     container.querySelectorAll('input[type="range"]').forEach(input => {
         input.addEventListener('input', function() {
-            const originalInput = document.getElementById(this.id);
+            const originalId = this.getAttribute('data-original-id');
+            const originalInput = originalId ? document.getElementById(originalId) : null;
             if (originalInput && originalInput !== this) {
                 originalInput.value = this.value;
                 // Update the corresponding number input for the original
-                const numberInput = document.querySelector(`#controls input[type="number"][data-slider="${this.id}"]`);
+                const numberInput = document.querySelector(`#controls input[type="number"][data-slider="${originalId}"]`);
                 if (numberInput) {
                     numberInput.value = this.value;
                 }
@@ -130,11 +135,11 @@ function attachInputListeners(container) {
     });
     
     // Attach file input listener
-    const fileInput = container.querySelector('#upload');
+    const fileInput = container.querySelector('input[type="file"][data-original-id="upload"]');
     if (fileInput) {
         fileInput.addEventListener('change', async function(e) {
             // Delegate to the original upload handler
-            const originalUpload = document.querySelector('#controls #upload');
+            const originalUpload = document.getElementById('upload');
             if (originalUpload && e.target.files[0]) {
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(e.target.files[0]);
@@ -145,22 +150,24 @@ function attachInputListeners(container) {
     }
     
     // Attach button listeners
-    const resetBtn = container.querySelector('#resetBtn');
+    const resetBtn = container.querySelector('button[onclick*="resetSliders"]');
     if (resetBtn) {
+        resetBtn.removeAttribute('onclick');
         resetBtn.addEventListener('click', resetSliders);
     }
     
-    const downloadBtn = container.querySelector('#downloadBtn');
+    const downloadBtn = container.querySelector('button[onclick*="downloadImage"]');
     if (downloadBtn) {
+        downloadBtn.removeAttribute('onclick');
         downloadBtn.addEventListener('click', downloadImage);
     }
     
-    const savePresetBtn = container.querySelector('#savePresetBtn');
+    const savePresetBtn = container.querySelector('[data-original-id="savePresetBtn"]');
     if (savePresetBtn) {
         savePresetBtn.addEventListener('click', openSavePresetModal);
     }
     
-    const loadPresetBtn = container.querySelector('#loadPresetBtn');
+    const loadPresetBtn = container.querySelector('[data-original-id="loadPresetBtn"]');
     if (loadPresetBtn) {
         loadPresetBtn.addEventListener('click', openLoadPresetModal);
     }
@@ -400,24 +407,19 @@ function drawImage(){
             [indices[i], indices[j]] = [indices[j], indices[i]];
         }
         
-        // Take subset of pixels to randomize
+        // Take subset of pixels to randomize and swap them pairwise
         let pixelsToSwap = indices.slice(0, pixelsToRandomize);
         
-        // Create a copy of pixel data for swapping
-        let dataCopy = new Uint8ClampedArray(data);
-        
-        // Swap pixels at selected indices with shuffled positions
-        for (let i = 0; i < pixelsToSwap.length; i += 2) {
-            if (i + 1 < pixelsToSwap.length) {
-                let idx1 = pixelsToSwap[i] * 4;
-                let idx2 = pixelsToSwap[i + 1] * 4;
-                
-                // Swap the pixels
-                for (let j = 0; j < 4; j++) {
-                    let temp = data[idx1 + j];
-                    data[idx1 + j] = dataCopy[idx2 + j];
-                    data[idx2 + j] = temp;
-                }
+        // Swap pixels at selected indices with each other
+        for (let i = 0; i < pixelsToSwap.length - 1; i += 2) {
+            let idx1 = pixelsToSwap[i] * 4;
+            let idx2 = pixelsToSwap[i + 1] * 4;
+            
+            // Swap the pixels using temporary storage
+            for (let j = 0; j < 4; j++) {
+                let temp = data[idx1 + j];
+                data[idx1 + j] = data[idx2 + j];
+                data[idx2 + j] = temp;
             }
         }
     }
