@@ -67,8 +67,11 @@ function initMobileFilters() {
                     const section = document.getElementById(sectionId);
                     if (section) {
                         const clone = section.cloneNode(true);
-                        // Remove IDs from clone and all its children to avoid duplicates
-                        clone.removeAttribute('id');
+                        // Save and remove IDs from clone and all its children to avoid duplicates
+                        if (clone.id) {
+                            clone.setAttribute('data-original-id', clone.id);
+                            clone.removeAttribute('id');
+                        }
                         clone.querySelectorAll('[id]').forEach(el => {
                             el.setAttribute('data-original-id', el.id);
                             el.removeAttribute('id');
@@ -174,8 +177,14 @@ function attachInputListeners(container) {
 }
 
 // Initialize mobile filters on load
-if (window.innerWidth <= 768) {
-    window.addEventListener('load', initMobileFilters);
+if (typeof window !== 'undefined') {
+    if (window.innerWidth <= 768) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMobileFilters);
+        } else {
+            initMobileFilters();
+        }
+    }
 }
 
 // Re-initialize on resize
