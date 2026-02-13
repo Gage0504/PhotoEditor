@@ -468,7 +468,7 @@ function drawImage(){
         }
     }
 
-    // Strip-Based Pixel Randomization
+        // Strip-Based Pixel Randomization
     let stripDir = document.getElementById('stripDirection')?.value || 'none';
     let stripSize = getSliderValue('stripSize');
     let stripCount = getSliderValue('stripCount');
@@ -483,9 +483,6 @@ function drawImage(){
             randomizeGridStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
         }
     }
-
-    // Block Glitch
-    if (s.block > 0) {
 
     // Block Glitch
     if (s.block > 0) {
@@ -522,7 +519,7 @@ function drawImage(){
             }
         }
     }
-
+    
     // Noise
     if (s.noise > 0) {
         for (let i = 0; i < data.length; i += 4) {
@@ -770,4 +767,122 @@ function downloadImage(){
     link.download = "edited_image.png";
     link.href = canvas.toDataURL();
     link.click();
+}
+
+
+// Strip randomization functions
+function randomizeHorizontalStrips(data, width, height, stripHeight, numStrips, intensity) {
+    if (!stripHeight || !numStrips || !intensity) return;
+    stripHeight = Math.max(1, Math.min(Math.floor(stripHeight), height));
+    intensity = Math.min(intensity / 100, 1);
+    numStrips = Math.min(numStrips, Math.floor(height / stripHeight));
+    
+    for (let i = 0; i < numStrips; i++) {
+        let y = Math.floor(Math.random() * Math.max(1, height - stripHeight));
+        let endY = Math.min(y + stripHeight, height);
+        
+        for (let row = y; row < endY; row++) {
+            let rowData = [];
+            for (let x = 0; x < width; x++) {
+                let idx = (row * width + x) * 4;
+                rowData.push(data[idx], data[idx + 1], data[idx + 2], data[idx + 3]);
+            }
+            
+            let swaps = Math.floor(width * intensity);
+            for (let s = 0; s < swaps; s++) {
+                let i1 = Math.floor(Math.random() * width) * 4;
+                let i2 = Math.floor(Math.random() * width) * 4;
+                for (let c = 0; c < 4; c++) {
+                    [rowData[i1 + c], rowData[i2 + c]] = [rowData[i2 + c], rowData[i1 + c]];
+                }
+            }
+            
+            for (let x = 0; x < width; x++) {
+                let idx = (row * width + x) * 4;
+                data[idx] = rowData[x * 4];
+                data[idx + 1] = rowData[x * 4 + 1];
+                data[idx + 2] = rowData[x * 4 + 2];
+                data[idx + 3] = rowData[x * 4 + 3];
+            }
+        }
+    }
+}
+
+function randomizeVerticalStrips(data, width, height, stripWidth, numStrips, intensity) {
+    if (!stripWidth || !numStrips || !intensity) return;
+    stripWidth = Math.max(1, Math.min(Math.floor(stripWidth), width));
+    intensity = Math.min(intensity / 100, 1);
+    numStrips = Math.min(numStrips, Math.floor(width / stripWidth));
+    
+    for (let i = 0; i < numStrips; i++) {
+        let x = Math.floor(Math.random() * Math.max(1, width - stripWidth));
+        let endX = Math.min(x + stripWidth, width);
+        
+        for (let col = x; col < endX; col++) {
+            let colData = [];
+            for (let y = 0; y < height; y++) {
+                let idx = (y * width + col) * 4;
+                colData.push(data[idx], data[idx + 1], data[idx + 2], data[idx + 3]);
+            }
+            
+            let swaps = Math.floor(height * intensity);
+            for (let s = 0; s < swaps; s++) {
+                let i1 = Math.floor(Math.random() * height) * 4;
+                let i2 = Math.floor(Math.random() * height) * 4;
+                for (let c = 0; c < 4; c++) {
+                    [colData[i1 + c], colData[i2 + c]] = [colData[i2 + c], colData[i1 + c]];
+                }
+            }
+            
+            for (let y = 0; y < height; y++) {
+                let idx = (y * width + col) * 4;
+                data[idx] = colData[y * 4];
+                data[idx + 1] = colData[y * 4 + 1];
+                data[idx + 2] = colData[y * 4 + 2];
+                data[idx + 3] = colData[y * 4 + 3];
+            }
+        }
+    }
+}
+
+function randomizeGridStrips(data, width, height, cellSize, numCells, intensity) {
+    if (!cellSize || !numCells || !intensity) return;
+    cellSize = Math.max(2, Math.min(Math.floor(cellSize), Math.min(width, height)));
+    intensity = Math.min(intensity / 100, 1);
+    
+    for (let i = 0; i < numCells; i++) {
+        let x = Math.floor(Math.random() * Math.max(1, width - cellSize));
+        let y = Math.floor(Math.random() * Math.max(1, height - cellSize));
+        let endX = Math.min(x + cellSize, width);
+        let endY = Math.min(y + cellSize, height);
+        
+        let cellData = [];
+        for (let cy = y; cy < endY; cy++) {
+            for (let cx = x; cx < endX; cx++) {
+                let idx = (cy * width + cx) * 4;
+                cellData.push(data[idx], data[idx + 1], data[idx + 2], data[idx + 3]);
+            }
+        }
+        
+        let pixels = cellData.length / 4;
+        let swaps = Math.floor(pixels * intensity);
+        for (let s = 0; s < swaps; s++) {
+            let i1 = Math.floor(Math.random() * pixels) * 4;
+            let i2 = Math.floor(Math.random() * pixels) * 4;
+            for (let c = 0; c < 4; c++) {
+                [cellData[i1 + c], cellData[i2 + c]] = [cellData[i2 + c], cellData[i1 + c]];
+            }
+        }
+        
+        let dataIdx = 0;
+        for (let cy = y; cy < endY; cy++) {
+            for (let cx = x; cx < endX; cx++) {
+                let idx = (cy * width + cx) * 4;
+                data[idx] = cellData[dataIdx++];
+                data[idx + 1] = cellData[dataIdx++];
+                data[idx + 2] = cellData[dataIdx++];
+                data[idx + 3] = cellData[dataIdx++];
+            }
+        }
+    }
 }
