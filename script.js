@@ -94,10 +94,14 @@ function attachInputListeners(container) {
     container.querySelectorAll('input[type="range"]').forEach(input => {
         input.addEventListener('input', function() {
             const originalInput = document.getElementById(this.id);
-            if (originalInput) {
+            if (originalInput && originalInput !== this) {
                 originalInput.value = this.value;
-                // Trigger input event on original
-                originalInput.dispatchEvent(new Event('input'));
+                // Update the corresponding number input for the original
+                const numberInput = document.querySelector(`#controls input[type="number"][data-slider="${this.id}"]`);
+                if (numberInput) {
+                    numberInput.value = this.value;
+                }
+                scheduleRender();
             }
         });
     });
@@ -115,8 +119,12 @@ function attachInputListeners(container) {
                 if (value > max) value = max;
                 originalSlider.value = value;
                 this.value = value;
-                // Trigger input event on original
-                originalSlider.dispatchEvent(new Event('input'));
+                // Update the corresponding number input for the original
+                const numberInput = document.querySelector(`#controls input[type="number"][data-slider="${sliderId}"]`);
+                if (numberInput) {
+                    numberInput.value = value;
+                }
+                scheduleRender();
             }
         });
     });
