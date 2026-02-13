@@ -114,7 +114,7 @@ body {
 
 .control-row {
   display: grid;
-  grid-template-columns: 70px 1fr 35px;
+  grid-template-columns: 70px 1fr 50px;
   gap: 8px;
   align-items: center;
   margin-bottom: 10px;
@@ -133,12 +133,17 @@ body {
   accent-color: #0066cc;
 }
 
-.control-row .value {
+.control-row .value-input {
   font-size: 11px;
   color: #0066cc;
   font-weight: 600;
   text-align: right;
-  min-width: 35px;
+  min-width: 50px;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 4px 6px;
+  width: 100%;
 }
 
 .tint-sliders {
@@ -150,7 +155,7 @@ body {
 
 .tint-row {
   display: grid;
-  grid-template-columns: 20px 1fr 35px;
+  grid-template-columns: 20px 1fr 45px;
   gap: 6px;
   align-items: center;
   margin-bottom: 6px;
@@ -170,10 +175,15 @@ body {
   height: 4px;
 }
 
-.tint-value {
+.tint-input {
   font-size: 10px;
   color: #999;
   text-align: right;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 3px 5px;
+  width: 100%;
 }
 
 #actionBtns {
@@ -389,8 +399,123 @@ canvas {
   }
   
   .control-row {
-    grid-template-columns: 65px 1fr 35px;
+    grid-template-columns: 65px 1fr 50px;
     font-size: 12px;
+  }
+}
+
+/* Mobile-only elements */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+  
+  #controls {
+    display: none;
+  }
+  
+  #mobileFilterGroups {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, #1a1a1a 0%, #151515 100%);
+    border-top: 2px solid #333;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 4px;
+    z-index: 100;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .filter-group-btn {
+    flex: 1;
+    min-width: 60px;
+    padding: 8px 4px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    margin: 0 2px;
+  }
+  
+  .filter-group-btn.active {
+    background: #0066cc;
+    border-color: #0066cc;
+  }
+  
+  #mobileFilterPanel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, #1a1a1a 0%, #151515 100%);
+    border-top: 2px solid #333;
+    max-height: 50vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 101;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  #mobileFilterPanel:not(.hidden) {
+    transform: translateY(0);
+  }
+  
+  .mobile-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #333;
+    position: sticky;
+    top: 0;
+    background: #1a1a1a;
+    z-index: 10;
+  }
+  
+  .mobile-panel-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  
+  #closeMobilePanel {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  
+  #mobilePanelContent {
+    padding: 8px 0;
+  }
+  
+  #mobilePanelContent .section {
+    border-bottom: none;
+  }
+  
+  #canvasContainer {
+    padding-bottom: 60px;
   }
 }
 
@@ -434,9 +559,15 @@ canvas {
   }
   
   .control-row {
-    grid-template-columns: 60px 1fr 30px;
+    grid-template-columns: 60px 1fr 45px;
     gap: 6px;
     margin-bottom: 8px;
+  }
+  
+  .control-row .value-input {
+    font-size: 10px;
+    min-width: 45px;
+    padding: 3px 4px;
   }
   
   .control-row label {
@@ -447,25 +578,23 @@ canvas {
     height: 4px;
   }
   
-  .control-row .value {
-    font-size: 10px;
-    min-width: 30px;
+  .tint-row {
+    grid-template-columns: 18px 1fr 40px;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  
+  .tint-input {
+    font-size: 9px;
+    padding: 2px 4px;
   }
   
   .tint-sliders {
     padding: 6px 8px;
   }
   
-  .tint-row {
-    margin-bottom: 5px;
-  }
-  
   .tint-label {
     font-size: 10px;
-  }
-  
-  .tint-value {
-    font-size: 9px;
   }
   
   #canvasContainer {
@@ -545,36 +674,38 @@ canvas {
   }
   
   .control-row {
-    grid-template-columns: 50px 1fr 25px;
+    grid-template-columns: 50px 1fr 40px;
     gap: 5px;
     margin-bottom: 6px;
+  }
+  
+  .control-row .value-input {
+    font-size: 9px;
+    min-width: 40px;
+    padding: 2px 3px;
   }
   
   .control-row label {
     font-size: 10px;
   }
   
-  .control-row .value {
-    font-size: 9px;
-    min-width: 25px;
+  .tint-row {
+    grid-template-columns: 18px 1fr 38px;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  
+  .tint-input {
+    font-size: 8px;
+    padding: 2px 3px;
   }
   
   .tint-sliders {
     padding: 5px 6px;
   }
   
-  .tint-row {
-    grid-template-columns: 18px 1fr 28px;
-    gap: 4px;
-    margin-bottom: 4px;
-  }
-  
   .tint-label {
     font-size: 9px;
-  }
-  
-  .tint-value {
-    font-size: 8px;
   }
   
   #canvasContainer {
@@ -655,18 +786,19 @@ canvas {
   }
   
   .control-row {
-    grid-template-columns: 45px 1fr 22px;
+    grid-template-columns: 45px 1fr 38px;
     gap: 3px;
     margin-bottom: 5px;
   }
   
-  .control-row label {
-    font-size: 9px;
+  .control-row .value-input {
+    font-size: 8px;
+    min-width: 38px;
+    padding: 2px;
   }
   
-  .control-row .value {
-    font-size: 8px;
-    min-width: 22px;
+  .control-row label {
+    font-size: 9px;
   }
   
   #canvasContainer {

@@ -9,6 +9,30 @@
 </head>
 <body>
 <div id="container">
+  <div id="canvasContainer">
+    <canvas id="canvas"></canvas>
+    <div id="loadingSpinner" class="spinner hidden"></div>
+  </div>
+
+  <!-- Mobile Filter Groups (bottom tabs) -->
+  <div id="mobileFilterGroups" class="mobile-only">
+    <button class="filter-group-btn" data-group="upload">📁 Upload</button>
+    <button class="filter-group-btn" data-group="distortion">🌀 Distort</button>
+    <button class="filter-group-btn" data-group="color">🎨 Color</button>
+    <button class="filter-group-btn" data-group="tint">🖌️ Tint</button>
+    <button class="filter-group-btn" data-group="effects">✨ Effects</button>
+    <button class="filter-group-btn" data-group="actions">⚙️ Actions</button>
+  </div>
+
+  <!-- Mobile Filter Panel (slides up when group selected) -->
+  <div id="mobileFilterPanel" class="mobile-only hidden">
+    <div class="mobile-panel-header">
+      <h3 id="mobilePanelTitle">Filters</h3>
+      <button id="closeMobilePanel">✕</button>
+    </div>
+    <div id="mobilePanelContent"></div>
+  </div>
+
   <div id="controls">
     <div id="header">
       <h1>Photo Edit</h1>
@@ -28,22 +52,22 @@
       <div class="control-row">
         <label>Displace</label>
         <input type="range" id="displace" min="0" max="200" value="0">
-        <span class="value">0</span>
+        <input type="number" class="value-input" data-slider="displace" min="0" max="200" value="0">
       </div>
       <div class="control-row">
         <label>Frequency</label>
         <input type="range" id="frequency" min="0.001" max="0.05" step="0.001" value="0.001">
-        <span class="value">0.00</span>
+        <input type="number" class="value-input" data-slider="frequency" min="0.001" max="0.05" step="0.001" value="0.001">
       </div>
       <div class="control-row">
         <label>RGB Shift</label>
         <input type="range" id="rgbShift" min="0" max="150" value="0">
-        <span class="value">0</span>
+        <input type="number" class="value-input" data-slider="rgbShift" min="0" max="150" value="0">
       </div>
       <div class="control-row">
         <label>Chromatic</label>
         <input type="range" id="chromatic" min="0" max="50" value="0">
-        <span class="value">0</span>
+        <input type="number" class="value-input" data-slider="chromatic" min="0" max="50" value="0">
       </div>
     </div>
 
@@ -52,22 +76,22 @@
       <div class="control-row">
         <label>Brightness</label>
         <input type="range" id="brightness" min="0" max="3" step="0.1" value="1">
-        <span class="value">1.0</span>
+        <input type="number" class="value-input" data-slider="brightness" min="0" max="3" step="0.1" value="1">
       </div>
       <div class="control-row">
         <label>Contrast</label>
         <input type="range" id="contrast" min="0" max="3" step="0.1" value="1">
-        <span class="value">1.0</span>
+        <input type="number" class="value-input" data-slider="contrast" min="0" max="3" step="0.1" value="1">
       </div>
       <div class="control-row">
         <label>Saturation</label>
         <input type="range" id="saturation" min="0" max="3" step="0.1" value="1">
-        <span class="value">1.0</span>
+        <input type="number" class="value-input" data-slider="saturation" min="0" max="3" step="0.1" value="1">
       </div>
       <div class="control-row">
         <label>Vignette</label>
         <input type="range" id="vignette" min="0" max="100" value="0">
-        <span class="value">0</span>
+        <input type="number" class="value-input" data-slider="vignette" min="0" max="100" value="0">
       </div>
     </div>
 
@@ -76,23 +100,23 @@
       <div class="control-row">
         <label>Strength</label>
         <input type="range" id="tintStrength" min="0" max="100" value="0">
-        <span class="value">0</span>
+        <input type="number" class="value-input" data-slider="tintStrength" min="0" max="100" value="0">
       </div>
       <div class="tint-sliders">
         <div class="tint-row">
           <span class="tint-label">R</span>
           <input type="range" id="red" min="0" max="255" value="128">
-          <span class="tint-value">128</span>
+          <input type="number" class="tint-input" data-slider="red" min="0" max="255" value="128">
         </div>
         <div class="tint-row">
           <span class="tint-label">G</span>
           <input type="range" id="green" min="0" max="255" value="128">
-          <span class="tint-value">128</span>
+          <input type="number" class="tint-input" data-slider="green" min="0" max="255" value="128">
         </div>
         <div class="tint-row">
           <span class="tint-label">B</span>
           <input type="range" id="blue" min="0" max="255" value="128">
-          <span class="tint-value">128</span>
+          <input type="number" class="tint-input" data-slider="blue" min="0" max="255" value="128">
         </div>
       </div>
     </div>
@@ -102,32 +126,32 @@
       <div class="control-row">
         <label>Pixelate</label>
         <input type="range" id="pixelate" min="1" max="50" value="1">
-        <span class="value">1</span>
+        <input type="number" class="value-input" data-slider="pixelate" min="1" max="50" value="1">
       </div>
       <div class="control-row">
         <label>Noise</label>
         <input type="range" id="noise" min="0" max="150" value="0">
-        <span class="value">0</span>
+        <input type="number" class="value-input" data-slider="noise" min="0" max="150" value="0">
       </div>
       <div class="control-row">
         <label>Random Pixels</label>
         <input type="range" id="random" min="0" max="100" value="0">
-        <span class="value">0</span>
+        <input type="number" class="value-input" data-slider="random" min="0" max="100" value="0">
       </div>
       <div class="control-row">
         <label>Block Glitch</label>
         <input type="range" id="block" min="0" max="40" value="0">
-        <span class="value">0</span>
+        <input type="number" class="value-input" data-slider="block" min="0" max="40" value="0">
       </div>
       <div class="control-row">
         <label>Edge Blend</label>
         <input type="range" id="edge" min="0" max="100" value="0">
-        <span class="value">0</span>
+        <input type="number" class="value-input" data-slider="edge" min="0" max="100" value="0">
       </div>
       <div class="control-row">
         <label>Posterize</label>
         <input type="range" id="posterize" min="1" max="256" value="256">
-        <span class="value">256</span>
+        <input type="number" class="value-input" data-slider="posterize" min="1" max="256" value="256">
       </div>
     </div>
 
@@ -135,11 +159,6 @@
       <button id="resetBtn" onclick="resetSliders()">⟲ Reset</button>
       <button id="downloadBtn" onclick="downloadImage()">⬇️ Download</button>
     </div>
-  </div>
-
-  <div id="canvasContainer">
-    <canvas id="canvas"></canvas>
-    <div id="loadingSpinner" class="spinner hidden"></div>
   </div>
 </div>
 
