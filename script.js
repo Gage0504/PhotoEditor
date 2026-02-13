@@ -432,321 +432,60 @@ function drawImage(){
             }
         }
     }
-    // Add to your drawImage() function, after the Random Pixels section
 
-// Strip-Based Pixel Randomization
-let stripDir = document.getElementById('stripDirection')?.value || 'none';
-let stripSize = getSliderValue('stripSize');
-let stripCount = getSliderValue('stripCount');
-let stripIntensity = getSliderValue('stripIntensity');
-
-if (stripDir !== 'none' && stripIntensity > 0) {
-    if (stripDir === 'horizontal') {
-        randomizeHorizontalStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
-    } else if (stripDir === 'vertical') {
-        randomizeVerticalStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
-    } else if (stripDir === 'grid') {
-        randomizeGridStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
-    }
-}
-
-// Horizontal Strips Function
-function randomizeHorizontalStrips(data, width, height, stripHeight, numStrips, intensity) {
-    stripHeight = Math.max(1, Math.floor(stripHeight));
-    intensity = intensity / 100; // Normalize 0-1
-    
-    // Generate random strip positions
-    let strips = [];
-    for (let i = 0; i < numStrips; i++) {
-        let y = Math.floor(Math.random() * (height - stripHeight));
-        strips.push({ y, height: stripHeight });
-    }
-    
-    // Process each strip
-    strips.forEach(strip => {
-        for (let row = strip.y; row < Math.min(strip.y + strip.height, height); row++) {
-            // Get all pixels in this row
-            let rowPixels = [];
-            for (let x = 0; x < width; x++) {
-                let idx = (row * width + x) * 4;
-                rowPixels.push({
-                    r: data[idx],
-                    g: data[idx + 1],
-                    b: data[idx + 2],
-                    a: data[idx + 3]
-                });
-            }
-            
-            // Determine how many pixels to shuffle based on intensity
-            let pixelsToShuffle = Math.floor(rowPixels.length * intensity);
-            
-            // Fisher-Yates shuffle on selected pixels
-            for (let i = 0; i < pixelsToShuffle; i++) {
-                let j = Math.floor(Math.random() * rowPixels.length);
-                [rowPixels[i], rowPixels[j]] = [rowPixels[j], rowPixels[i]];
-            }
-            
-            // Write shuffled pixels back
-            for (let x = 0; x < width; x++) {
-                let idx = (row * width + x) * 4;
-                data[idx] = rowPixels[x].r;
-                data[idx + 1] = rowPixels[x].g;
-                data[idx + 2] = rowPixels[x].b;
-                data[idx + 3] = rowPixels[x].a;
-            }
-        }
-    });
-}
-
-// Vertical Strips Function
-function randomizeVerticalStrips(data, width, height, stripWidth, numStrips, intensity) {
-    stripWidth = Math.max(1, Math.floor(stripWidth));
-    intensity = intensity / 100;
-    
-    // Generate random strip positions
-    let strips = [];
-    for (let i = 0; i < numStrips; i++) {
-        let x = Math.floor(Math.random() * (width - stripWidth));
-        strips.push({ x, width: stripWidth });
-    }
-    
-    // Process each strip
-    strips.forEach(strip => {
-        for (let col = strip.x; col < Math.min(strip.x + strip.width, width); col++) {
-            // Get all pixels in this column
-            let colPixels = [];
-            for (let y = 0; y < height; y++) {
-                let idx = (y * width + col) * 4;
-                colPixels.push({
-                    r: data[idx],
-                    g: data[idx + 1],
-                    b: data[idx + 2],
-                    a: data[idx + 3]
-                });
-            }
-            
-            // Shuffle based on intensity
-            let pixelsToShuffle = Math.floor(colPixels.length * intensity);
-            for (let i = 0; i < pixelsToShuffle; i++) {
-                let j = Math.floor(Math.random() * colPixels.length);
-                [colPixels[i], colPixels[j]] = [colPixels[j], colPixels[i]];
-            }
-            
-            // Write back
-            for (let y = 0; y < height; y++) {
-                let idx = (y * width + col) * 4;
-                data[idx] = colPixels[y].r;
-                data[idx + 1] = colPixels[y].g;
-                data[idx + 2] = colPixels[y].b;
-                data[idx + 3] = colPixels[y].a;
-            }
-        }
-    });
-}
-
-// Grid Strips Function (combines both)
-function randomizeGridStrips(data, width, height, cellSize, numCells, intensity) {
-    cellSize = Math.max(1, Math.floor(cellSize));
-    intensity = intensity / 100;
-    
-    // Generate random grid cells
-    let cells = [];
-    for (let i = 0; i < numCells; i++) {
-        let x = Math.floor(Math.random() * (width - cellSize));
-        let y = Math.floor(Math.random() * (height - cellSize));
-        cells.push({ x, y, size: cellSize });
-    }
-    
-    // Process each cell
-    cells.forEach(cell => {
-        let cellPixels = [];
+    // Random Pixels - shuffles actual image pixels
+    if (s.random > 0) {
+        let t = s.random / 100;
+        let totalPixels = processWidth * processHeight;
+        let pixelsToRandomize = Math.floor(totalPixels * t);
         
-        // Collect all pixels in this cell
-        for (let dy = 0; dy < cell.size && cell.y + dy < height; dy++) {
-            for (let dx = 0; dx < cell.size && cell.x + dx < width; dx++) {
-                let idx = ((cell.y + dy) * width + (cell.x + dx)) * 4;
-                cellPixels.push({
-                    r: data[idx],
-                    g: data[idx + 1],
-                    b: data[idx + 2],
-                    a: data[idx + 3],
-                    x: dx,
-                    y: dy
-                });
-            }
+        // Create array of all pixel indices
+        let indices = [];
+        for (let i = 0; i < totalPixels; i++) {
+            indices.push(i);
         }
         
-        // Shuffle pixels
-        let pixelsToShuffle = Math.floor(cellPixels.length * intensity);
-        for (let i = 0; i < pixelsToShuffle; i++) {
-            let j = Math.floor(Math.random() * cellPixels.length);
-            [cellPixels[i], cellPixels[j]] = [cellPixels[j], cellPixels[i]];
-        }
-        // Add to your drawImage() function, after the Random Pixels section
-
-// Strip-Based Pixel Randomization
-let stripDir = document.getElementById('stripDirection')?.value || 'none';
-let stripSize = getSliderValue('stripSize');
-let stripCount = getSliderValue('stripCount');
-let stripIntensity = getSliderValue('stripIntensity');
-
-if (stripDir !== 'none' && stripIntensity > 0) {
-    if (stripDir === 'horizontal') {
-        randomizeHorizontalStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
-    } else if (stripDir === 'vertical') {
-        randomizeVerticalStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
-    } else if (stripDir === 'grid') {
-        randomizeGridStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
-    }
-}
-
-// Horizontal Strips Function
-function randomizeHorizontalStrips(data, width, height, stripHeight, numStrips, intensity) {
-    stripHeight = Math.max(1, Math.floor(stripHeight));
-    intensity = intensity / 100; // Normalize 0-1
-    
-    // Generate random strip positions
-    let strips = [];
-    for (let i = 0; i < numStrips; i++) {
-        let y = Math.floor(Math.random() * (height - stripHeight));
-        strips.push({ y, height: stripHeight });
-    }
-    
-    // Process each strip
-    strips.forEach(strip => {
-        for (let row = strip.y; row < Math.min(strip.y + strip.height, height); row++) {
-            // Get all pixels in this row
-            let rowPixels = [];
-            for (let x = 0; x < width; x++) {
-                let idx = (row * width + x) * 4;
-                rowPixels.push({
-                    r: data[idx],
-                    g: data[idx + 1],
-                    b: data[idx + 2],
-                    a: data[idx + 3]
-                });
-            }
-            
-            // Determine how many pixels to shuffle based on intensity
-            let pixelsToShuffle = Math.floor(rowPixels.length * intensity);
-            
-            // Fisher-Yates shuffle on selected pixels
-            for (let i = 0; i < pixelsToShuffle; i++) {
-                let j = Math.floor(Math.random() * rowPixels.length);
-                [rowPixels[i], rowPixels[j]] = [rowPixels[j], rowPixels[i]];
-            }
-            
-            // Write shuffled pixels back
-            for (let x = 0; x < width; x++) {
-                let idx = (row * width + x) * 4;
-                data[idx] = rowPixels[x].r;
-                data[idx + 1] = rowPixels[x].g;
-                data[idx + 2] = rowPixels[x].b;
-                data[idx + 3] = rowPixels[x].a;
-            }
-        }
-    });
-}
-
-// Vertical Strips Function
-function randomizeVerticalStrips(data, width, height, stripWidth, numStrips, intensity) {
-    stripWidth = Math.max(1, Math.floor(stripWidth));
-    intensity = intensity / 100;
-    
-    // Generate random strip positions
-    let strips = [];
-    for (let i = 0; i < numStrips; i++) {
-        let x = Math.floor(Math.random() * (width - stripWidth));
-        strips.push({ x, width: stripWidth });
-    }
-    
-    // Process each strip
-    strips.forEach(strip => {
-        for (let col = strip.x; col < Math.min(strip.x + strip.width, width); col++) {
-            // Get all pixels in this column
-            let colPixels = [];
-            for (let y = 0; y < height; y++) {
-                let idx = (y * width + col) * 4;
-                colPixels.push({
-                    r: data[idx],
-                    g: data[idx + 1],
-                    b: data[idx + 2],
-                    a: data[idx + 3]
-                });
-            }
-            
-            // Shuffle based on intensity
-            let pixelsToShuffle = Math.floor(colPixels.length * intensity);
-            for (let i = 0; i < pixelsToShuffle; i++) {
-                let j = Math.floor(Math.random() * colPixels.length);
-                [colPixels[i], colPixels[j]] = [colPixels[j], colPixels[i]];
-            }
-            
-            // Write back
-            for (let y = 0; y < height; y++) {
-                let idx = (y * width + col) * 4;
-                data[idx] = colPixels[y].r;
-                data[idx + 1] = colPixels[y].g;
-                data[idx + 2] = colPixels[y].b;
-                data[idx + 3] = colPixels[y].a;
-            }
-        }
-    });
-}
-
-// Grid Strips Function (combines both)
-function randomizeGridStrips(data, width, height, cellSize, numCells, intensity) {
-    cellSize = Math.max(1, Math.floor(cellSize));
-    intensity = intensity / 100;
-    
-    // Generate random grid cells
-    let cells = [];
-    for (let i = 0; i < numCells; i++) {
-        let x = Math.floor(Math.random() * (width - cellSize));
-        let y = Math.floor(Math.random() * (height - cellSize));
-        cells.push({ x, y, size: cellSize });
-    }
-    
-    // Process each cell
-    cells.forEach(cell => {
-        let cellPixels = [];
-        
-        // Collect all pixels in this cell
-        for (let dy = 0; dy < cell.size && cell.y + dy < height; dy++) {
-            for (let dx = 0; dx < cell.size && cell.x + dx < width; dx++) {
-                let idx = ((cell.y + dy) * width + (cell.x + dx)) * 4;
-                cellPixels.push({
-                    r: data[idx],
-                    g: data[idx + 1],
-                    b: data[idx + 2],
-                    a: data[idx + 3],
-                    x: dx,
-                    y: dy
-                });
-            }
+        // Shuffle indices using Fisher-Yates algorithm
+        for (let i = indices.length - 1; i > 0; i--) {
+            let j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
         }
         
-        // Shuffle pixels
-        let pixelsToShuffle = Math.floor(cellPixels.length * intensity);
-        for (let i = 0; i < pixelsToShuffle; i++) {
-            let j = Math.floor(Math.random() * cellPixels.length);
-            [cellPixels[i], cellPixels[j]] = [cellPixels[j], cellPixels[i]];
-        }
+        // Take subset of pixels to randomize and swap them pairwise
+        let pixelsToSwap = indices.slice(0, pixelsToRandomize);
         
-        // Write back to original positions (pixels are swapped but positions stay)
-        cellPixels.forEach((pixel, i) => {
-            let dy = Math.floor(i / cell.size);
-            let dx = i % cell.size;
-            if (cell.y + dy < height && cell.x + dx < width) {
-                let idx = ((cell.y + dy) * width + (cell.x + dx)) * 4;
-                data[idx] = pixel.r;
-                data[idx + 1] = pixel.g;
-                data[idx + 2] = pixel.b;
-                data[idx + 3] = pixel.a;
+        // Swap pixels at selected indices with each other
+        for (let i = 0; i < pixelsToSwap.length - 1; i += 2) {
+            let idx1 = pixelsToSwap[i] * 4;
+            let idx2 = pixelsToSwap[i + 1] * 4;
+            
+            // Swap the pixels using temporary storage
+            for (let j = 0; j < 4; j++) {
+                let temp = data[idx1 + j];
+                data[idx1 + j] = data[idx2 + j];
+                data[idx2 + j] = temp;
             }
-        });
-    });
-}
+        }
+    }
+
+    // Strip-Based Pixel Randomization
+    let stripDir = document.getElementById('stripDirection')?.value || 'none';
+    let stripSize = getSliderValue('stripSize');
+    let stripCount = getSliderValue('stripCount');
+    let stripIntensity = getSliderValue('stripIntensity');
+
+    if (stripDir !== 'none' && stripIntensity > 0) {
+        if (stripDir === 'horizontal') {
+            randomizeHorizontalStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
+        } else if (stripDir === 'vertical') {
+            randomizeVerticalStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
+        } else if (stripDir === 'grid') {
+            randomizeGridStrips(data, processWidth, processHeight, stripSize, stripCount, stripIntensity);
+        }
+    }
+
+    // Block Glitch
+    if (s.block > 0) {
 
     // Block Glitch
     if (s.block > 0) {
