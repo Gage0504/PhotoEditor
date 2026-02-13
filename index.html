@@ -175,6 +175,42 @@
   </div>
 </div>
 
+  <div class="section">
+  <h3>Pixel Strips</h3>
+  
+  <!-- Strip Direction -->
+  <div class="control-row">
+    <label>Direction</label>
+    <select id="stripDirection">
+      <option value="none">None</option>
+      <option value="horizontal">Horizontal</option>
+      <option value="vertical">Vertical</option>
+      <option value="grid">Grid</option>
+    </select>
+  </div>
+
+    
+  <div class="control-row">
+    <label>Strip Size</label>
+    <input type="range" id="stripSize" min="1" max="200" value="10">
+    <input type="number" class="value-input" data-slider="stripSize" min="1" max="200" value="10">
+  </div>
+
+    
+  <div class="control-row">
+    <label>Count</label>
+    <input type="range" id="stripCount" min="1" max="50" value="5">
+    <input type="number" class="value-input" data-slider="stripCount" min="1" max="50" value="5">
+  </div>
+  
+
+  <div class="control-row">
+    <label>Intensity</label>
+    <input type="range" id="stripIntensity" min="0" max="100" value="50">
+    <input type="number" class="value-input" data-slider="stripIntensity" min="0" max="100" value="50">
+  </div>
+</div>
+
 <script src="script.js"></script>
 </body>
 </html>
