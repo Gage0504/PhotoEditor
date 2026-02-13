@@ -9,28 +9,221 @@ let isMobile = window.innerWidth <= 768;
 let processingScheduled = false;
 let currentPresetName = null;
 
-// Real-time value display updates
+// Mobile filter group handling
+function initMobileFilters() {
+    if (window.innerWidth > 768) return;
+    
+    const filterGroups = {
+        upload: ['uploadSection', 'header'],
+        distortion: ['section-distortion'],
+        color: ['section-color'],
+        tint: ['section-tint'],
+        effects: ['section-effects'],
+        actions: ['actionBtns']
+    };
+    
+    // Add IDs to sections for easier reference
+    document.querySelectorAll('.section').forEach((section, index) => {
+        const heading = section.querySelector('h3');
+        if (heading) {
+            const text = heading.textContent.toLowerCase();
+            if (text.includes('distortion') || text.includes('shift')) {
+                section.id = 'section-distortion';
+            } else if (text.includes('color') || text.includes('light')) {
+                section.id = 'section-color';
+            } else if (text.includes('tint')) {
+                section.id = 'section-tint';
+            } else if (text.includes('effects') || text.includes('glitch')) {
+                section.id = 'section-effects';
+            }
+        }
+    });
+    
+    const filterBtns = document.querySelectorAll('.filter-group-btn');
+    const mobilePanel = document.getElementById('mobileFilterPanel');
+    const mobilePanelContent = document.getElementById('mobilePanelContent');
+    const mobilePanelTitle = document.getElementById('mobilePanelTitle');
+    const closeBtn = document.getElementById('closeMobilePanel');
+    
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const group = this.getAttribute('data-group');
+            
+            // Toggle active state
+            filterBtns.forEach(b => b.classList.remove('active'));
+            
+            if (mobilePanel.classList.contains('hidden') || !this.classList.contains('active')) {
+                this.classList.add('active');
+                
+                // Clear previous content
+                mobilePanelContent.innerHTML = '';
+                
+                // Set title
+                mobilePanelTitle.textContent = this.textContent;
+                
+                // Clone and add relevant sections
+                const sections = filterGroups[group] || [];
+                sections.forEach(sectionId => {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        const clone = section.cloneNode(true);
+                        // Save and remove IDs from clone and all its children to avoid duplicates
+                        if (clone.id) {
+                            clone.setAttribute('data-original-id', clone.id);
+                            clone.removeAttribute('id');
+                        }
+                        clone.querySelectorAll('[id]').forEach(el => {
+                            el.setAttribute('data-original-id', el.id);
+                            el.removeAttribute('id');
+                        });
+                        // Re-attach event listeners for cloned inputs
+                        attachInputListeners(clone);
+                        mobilePanelContent.appendChild(clone);
+                    }
+                });
+                
+                // Show panel
+                mobilePanel.classList.remove('hidden');
+            } else {
+                mobilePanel.classList.add('hidden');
+            }
+        });
+    });
+    
+    closeBtn.addEventListener('click', function() {
+        mobilePanel.classList.add('hidden');
+        filterBtns.forEach(b => b.classList.remove('active'));
+    });
+}
+
+function attachInputListeners(container) {
+    // Attach slider listeners
+    container.querySelectorAll('input[type="range"]').forEach(input => {
+        input.addEventListener('input', function() {
+            const originalId = this.getAttribute('data-original-id');
+            const originalInput = originalId ? document.getElementById(originalId) : null;
+            if (originalInput && originalInput !== this) {
+                originalInput.value = this.value;
+                // Update the corresponding number input for the original
+                const numberInput = document.querySelector(`#controls input[type="number"][data-slider="${originalId}"]`);
+                if (numberInput) {
+                    numberInput.value = this.value;
+                }
+                scheduleRender();
+            }
+        });
+    });
+    
+    // Attach number input listeners
+    container.querySelectorAll('input[type="number"][data-slider]').forEach(input => {
+        input.addEventListener('input', function() {
+            const sliderId = this.getAttribute('data-slider');
+            const originalSlider = document.getElementById(sliderId);
+            if (originalSlider) {
+                let value = parseFloat(this.value);
+                let min = parseFloat(originalSlider.min);
+                let max = parseFloat(originalSlider.max);
+                if (value < min) value = min;
+                if (value > max) value = max;
+                originalSlider.value = value;
+                this.value = value;
+                // Update the corresponding number input for the original
+                const numberInput = document.querySelector(`#controls input[type="number"][data-slider="${sliderId}"]`);
+                if (numberInput) {
+                    numberInput.value = value;
+                }
+                scheduleRender();
+            }
+        });
+    });
+    
+    // Attach file input listener
+    const fileInput = container.querySelector('input[type="file"][data-original-id="upload"]');
+    if (fileInput) {
+        fileInput.addEventListener('change', async function(e) {
+            // Delegate to the original upload handler
+            const originalUpload = document.getElementById('upload');
+            if (originalUpload && e.target.files[0]) {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(e.target.files[0]);
+                originalUpload.files = dataTransfer.files;
+                originalUpload.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+    }
+    
+    // Attach button listeners
+    const resetBtn = container.querySelector('button[onclick*="resetSliders"]');
+    if (resetBtn) {
+        resetBtn.removeAttribute('onclick');
+        resetBtn.addEventListener('click', resetSliders);
+    }
+    
+    const downloadBtn = container.querySelector('button[onclick*="downloadImage"]');
+    if (downloadBtn) {
+        downloadBtn.removeAttribute('onclick');
+        downloadBtn.addEventListener('click', downloadImage);
+    }
+    
+    const savePresetBtn = container.querySelector('[data-original-id="savePresetBtn"]');
+    if (savePresetBtn) {
+        savePresetBtn.addEventListener('click', openSavePresetModal);
+    }
+    
+    const loadPresetBtn = container.querySelector('[data-original-id="loadPresetBtn"]');
+    if (loadPresetBtn) {
+        loadPresetBtn.addEventListener('click', openLoadPresetModal);
+    }
+}
+
+// Initialize mobile filters on load
+if (typeof window !== 'undefined') {
+    if (window.innerWidth <= 768) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMobileFilters);
+        } else {
+            initMobileFilters();
+        }
+    }
+}
+
+// Re-initialize on resize
+window.addEventListener('resize', function() {
+    const wasMobile = isMobile;
+    isMobile = window.innerWidth <= 768;
+    if (isMobile && !wasMobile) {
+        initMobileFilters();
+    }
+});
+
+
+// Real-time value display updates for sliders
 document.querySelectorAll('input[type="range"]').forEach(input => {
     input.addEventListener('input', function(e) {
-        let nextSpan = this.nextElementSibling;
-        if (nextSpan && nextSpan.classList.contains('value')) {
-            if (this.id === 'frequency') {
-                nextSpan.textContent = parseFloat(this.value).toFixed(3);
-            } else if (this.id === 'brightness' || this.id === 'contrast' || this.id === 'saturation') {
-                nextSpan.textContent = parseFloat(this.value).toFixed(1);
-            } else {
-                nextSpan.textContent = this.value;
-            }
+        // Update corresponding number input
+        let numberInput = document.querySelector(`input[type="number"][data-slider="${this.id}"]`);
+        if (numberInput) {
+            numberInput.value = this.value;
         }
         scheduleRender();
     });
 });
 
-// Tint value displays
-document.querySelectorAll('.tint-row input[type="range"]').forEach(input => {
+// Real-time value updates for number inputs
+document.querySelectorAll('input[type="number"][data-slider]').forEach(input => {
     input.addEventListener('input', function() {
-        let tintValue = this.parentElement.querySelector('.tint-value');
-        if (tintValue) tintValue.textContent = this.value;
+        let sliderId = this.getAttribute('data-slider');
+        let slider = document.getElementById(sliderId);
+        if (slider) {
+            // Clamp value to slider's min/max
+            let value = parseFloat(this.value);
+            let min = parseFloat(slider.min);
+            let max = parseFloat(slider.max);
+            if (value < min) value = min;
+            if (value > max) value = max;
+            slider.value = value;
+            this.value = value; // Update input to clamped value
+        }
         scheduleRender();
     });
 });
@@ -205,14 +398,37 @@ function drawImage(){
         for (let i = 0; i < data.length; i++) data[i] = nd[i];
     }
 
-    // Random Pixels
+    // Random Pixels - shuffles actual image pixels
     if (s.random > 0) {
         let t = s.random / 100;
-        for (let i = 0; i < data.length; i += 4) {
-            if (Math.random() < t) {
-                data[i] = Math.random() * 255;
-                data[i+1] = Math.random() * 255;
-                data[i+2] = Math.random() * 255;
+        let totalPixels = processWidth * processHeight;
+        let pixelsToRandomize = Math.floor(totalPixels * t);
+        
+        // Create array of all pixel indices
+        let indices = [];
+        for (let i = 0; i < totalPixels; i++) {
+            indices.push(i);
+        }
+        
+        // Shuffle indices using Fisher-Yates algorithm
+        for (let i = indices.length - 1; i > 0; i--) {
+            let j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        
+        // Take subset of pixels to randomize and swap them pairwise
+        let pixelsToSwap = indices.slice(0, pixelsToRandomize);
+        
+        // Swap pixels at selected indices with each other
+        for (let i = 0; i < pixelsToSwap.length - 1; i += 2) {
+            let idx1 = pixelsToSwap[i] * 4;
+            let idx2 = pixelsToSwap[i + 1] * 4;
+            
+            // Swap the pixels using temporary storage
+            for (let j = 0; j < 4; j++) {
+                let temp = data[idx1 + j];
+                data[idx1 + j] = data[idx2 + j];
+                data[idx2 + j] = temp;
             }
         }
     }
@@ -393,15 +609,12 @@ function saveCurrentSettings() {
 function loadSettings(settings) {
     Object.keys(settings).forEach(id => {
         let elem = document.getElementById(id);
-        if (elem) elem.value = settings[id];
-        let span = elem ? elem.nextElementSibling : null;
-        if (span && span.classList.contains('value')) {
-            if (id === 'frequency') {
-                span.textContent = parseFloat(settings[id]).toFixed(3);
-            } else if (['brightness', 'contrast', 'saturation'].includes(id)) {
-                span.textContent = parseFloat(settings[id]).toFixed(1);
-            } else {
-                span.textContent = settings[id];
+        if (elem) {
+            elem.value = settings[id];
+            // Update corresponding number input
+            let numberInput = document.querySelector(`input[type="number"][data-slider="${id}"]`);
+            if (numberInput) {
+                numberInput.value = settings[id];
             }
         }
     });
