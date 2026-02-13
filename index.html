@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PhotoEditor</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+</head>
+<body>
+<div id="container">
+  <div id="controls">
+    <div id="header">
+      <h1>Photo Edit</h1>
+      <div id="presetBtns">
+        <button id="savePresetBtn" class="preset-btn">💾 Save</button>
+        <button id="loadPresetBtn" class="preset-btn">📂 Load</button>
+      </div>
+    </div>
+
+    <div id="uploadSection">
+      <input type="file" id="upload" accept="image/*,.heic,.heif">
+      <span id="fileName">No image loaded</span>
+    </div>
+
+    <div class="section">
+      <h3>Distortion & Shift</h3>
+      <div class="control-row">
+        <label>Displace</label>
+        <input type="range" id="displace" min="0" max="200" value="0">
+        <span class="value">0</span>
+      </div>
+      <div class="control-row">
+        <label>Frequency</label>
+        <input type="range" id="frequency" min="0.001" max="0.05" step="0.001" value="0.001">
+        <span class="value">0.00</span>
+      </div>
+      <div class="control-row">
+        <label>RGB Shift</label>
+        <input type="range" id="rgbShift" min="0" max="150" value="0">
+        <span class="value">0</span>
+      </div>
+      <div class="control-row">
+        <label>Chromatic</label>
+        <input type="range" id="chromatic" min="0" max="50" value="0">
+        <span class="value">0</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Color & Light</h3>
+      <div class="control-row">
+        <label>Brightness</label>
+        <input type="range" id="brightness" min="0" max="3" step="0.1" value="1">
+        <span class="value">1.0</span>
+      </div>
+      <div class="control-row">
+        <label>Contrast</label>
+        <input type="range" id="contrast" min="0" max="3" step="0.1" value="1">
+        <span class="value">1.0</span>
+      </div>
+      <div class="control-row">
+        <label>Saturation</label>
+        <input type="range" id="saturation" min="0" max="3" step="0.1" value="1">
+        <span class="value">1.0</span>
+      </div>
+      <div class="control-row">
+        <label>Vignette</label>
+        <input type="range" id="vignette" min="0" max="100" value="0">
+        <span class="value">0</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Tint (RGB)</h3>
+      <div class="control-row">
+        <label>Strength</label>
+        <input type="range" id="tintStrength" min="0" max="100" value="0">
+        <span class="value">0</span>
+      </div>
+      <div class="tint-sliders">
+        <div class="tint-row">
+          <span class="tint-label">R</span>
+          <input type="range" id="red" min="0" max="255" value="128">
+          <span class="tint-value">128</span>
+        </div>
+        <div class="tint-row">
+          <span class="tint-label">G</span>
+          <input type="range" id="green" min="0" max="255" value="128">
+          <span class="tint-value">128</span>
+        </div>
+        <div class="tint-row">
+          <span class="tint-label">B</span>
+          <input type="range" id="blue" min="0" max="255" value="128">
+          <span class="tint-value">128</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Effects & Glitch</h3>
+      <div class="control-row">
+        <label>Pixelate</label>
+        <input type="range" id="pixelate" min="1" max="50" value="1">
+        <span class="value">1</span>
+      </div>
+      <div class="control-row">
+        <label>Noise</label>
+        <input type="range" id="noise" min="0" max="150" value="0">
+        <span class="value">0</span>
+      </div>
+      <div class="control-row">
+        <label>Random Pixels</label>
+        <input type="range" id="random" min="0" max="100" value="0">
+        <span class="value">0</span>
+      </div>
+      <div class="control-row">
+        <label>Block Glitch</label>
+        <input type="range" id="block" min="0" max="40" value="0">
+        <span class="value">0</span>
+      </div>
+      <div class="control-row">
+        <label>Edge Blend</label>
+        <input type="range" id="edge" min="0" max="100" value="0">
+        <span class="value">0</span>
+      </div>
+      <div class="control-row">
+        <label>Posterize</label>
+        <input type="range" id="posterize" min="1" max="256" value="256">
+        <span class="value">256</span>
+      </div>
+    </div>
+
+    <div id="actionBtns">
+      <button id="resetBtn" onclick="resetSliders()">⟲ Reset</button>
+      <button id="downloadBtn" onclick="downloadImage()">⬇️ Download</button>
+    </div>
+  </div>
+
+  <div id="canvasContainer">
+    <canvas id="canvas"></canvas>
+    <div id="loadingSpinner" class="spinner hidden"></div>
+  </div>
+</div>
+
+<div id="presetModal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close" onclick="closePresetModal()">&times;</span>
+    <h2 id="modalTitle">Save Preset</h2>
+    <input type="text" id="presetName" placeholder="Preset name..." maxlength="30">
+    <div id="presetList"></div>
+    <div class="modal-buttons">
+      <button onclick="confirmPreset()" id="confirmBtn">Save</button>
+      <button onclick="closePresetModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
